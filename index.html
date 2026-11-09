@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora e Simulador de Hash - Alura</title>
-    <!-- CSS via Tailwind CDN para estilização rápida -->
+    <title>Simulador de Força Bruta - Alura</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -12,199 +12,217 @@
         code, pre, .font-mono { font-family: 'Fira Code', monospace; }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between p-4 md:p-8">
+<body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-8">
 
-    <div class="max-w-4xl mx-auto w-full space-y-8">
+    <div class="max-w-4xl mx-auto space-y-6">
         
-        <!-- Header -->
+        <!-- Cabeçalho -->
         <header class="text-center space-y-2 border-b border-slate-800 pb-6">
-            <h1 class="text-3xl md:text-4xl font-extrabold text-blue-400">
-                Visualizador de Funções de Hash e Colisões
+            <h1 class="text-3xl md:text-4xl font-extrabold text-amber-400">
+                Simulador de Ataque de Força Bruta
             </h1>
             <p class="text-slate-400 text-sm md:text-base">
-                Entenda como duas palavras diferentes podem gerar o mesmo resultado numérico (colisão de hash).
+                Teste de senhas curtas (até 3 caracteres) com acompanhamento em tempo real do progresso.
             </p>
         </header>
 
-        <!-- Seletor de Modo/Algoritmo -->
-        <section class="bg-slate-800 p-4 rounded-xl border border-slate-700">
-            <label class="block text-sm font-semibold text-slate-300 mb-2">Escolha a função de Hash:</label>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <button id="btn-simple" onclick="setAlgorithm('simple')" class="p-3 rounded-lg border-2 border-blue-500 bg-blue-500/10 text-left transition hover:bg-blue-500/20">
-                    <div class="font-bold text-blue-300">1. Hash Simples (Soma das Letras)</div>
-                    <div class="text-xs text-slate-400 mt-1">Soma os valores numéricos de cada letra ($A=1, B=2 \dots$). Causa colisão com anagramas!</div>
-                </button>
-                <button id="btn-weighted" onclick="setAlgorithm('weighted')" class="p-3 rounded-lg border-2 border-slate-700 bg-slate-800/50 text-left transition hover:bg-slate-700/50">
-                    <div class="font-bold text-slate-300">2. Hash Melhorada (Soma com Pesos)</div>
-                    <div class="text-xs text-slate-400 mt-1">Multiplica o valor da letra pela sua posição. Evita colisões em anagramas!</div>
-                </button>
-            </div>
-        </section>
-
-        <!-- Área de Teste de Colisão (Comparador) -->
-        <section class="bg-slate-800/60 p-6 rounded-xl border border-slate-700 space-y-6">
-            <h2 class="text-xl font-bold text-slate-200">Comparar Duas Palavras</h2>
+        <!-- Configurações do Teste -->
+        <section class="bg-slate-800 p-6 rounded-xl border border-slate-700 space-y-4">
+            <h2 class="text-lg font-bold text-slate-200">Parâmetros do Teste</h2>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Palavra 1 -->
-                <div class="space-y-3">
-                    <label for="word1" class="block text-sm font-medium text-slate-300">Palavra 1</label>
-                    <input type="text" id="word1" value="AMOR" oninput="calculate()" placeholder="Digite uma palavra..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 font-mono text-lg text-emerald-400 uppercase focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    
-                    <div class="bg-slate-900/80 p-4 rounded-lg border border-slate-800 space-y-2">
-                        <div class="text-xs text-slate-400">Decomposição:</div>
-                        <div id="breakdown1" class="font-mono text-xs text-slate-300 break-words"></div>
-                        <div class="flex justify-between items-center pt-2 border-t border-slate-800">
-                            <span class="text-sm font-semibold text-slate-400">Hash:</span>
-                            <span id="hash1" class="font-mono text-xl font-bold text-emerald-400">0</span>
-                        </div>
-                    </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="target-password" class="block text-sm font-medium text-slate-300 mb-1">
+                        Senha Alvo (máx. 3 caracteres):
+                    </label>
+                    <input type="text" id="target-password" maxlength="3" value="b2a" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 font-mono text-amber-400 uppercase focus:outline-none focus:ring-2 focus:ring-amber-500">
                 </div>
 
-                <!-- Palavra 2 -->
-                <div class="space-y-3">
-                    <label for="word2" class="block text-sm font-medium text-slate-300">Palavra 2</label>
-                    <input type="text" id="word2" value="ROMA" oninput="calculate()" placeholder="Digite uma palavra..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 font-mono text-lg text-indigo-400 uppercase focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    
-                    <div class="bg-slate-900/80 p-4 rounded-lg border border-slate-800 space-y-2">
-                        <div class="text-xs text-slate-400">Decomposição:</div>
-                        <div id="breakdown2" class="font-mono text-xs text-slate-300 break-words"></div>
-                        <div class="flex justify-between items-center pt-2 border-t border-slate-800">
-                            <span class="text-sm font-semibold text-slate-400">Hash:</span>
-                            <span id="hash2" class="font-mono text-xl font-bold text-indigo-400">0</span>
-                        </div>
-                    </div>
+                <div>
+                    <label for="charset" class="block text-sm font-medium text-slate-300 mb-1">
+                        Conjunto de Caracteres:
+                    </label>
+                    <input type="text" id="charset" value="abc123" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 font-mono text-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500">
                 </div>
             </div>
 
-            <!-- Card de Resultado da Comparação -->
-            <div id="result-box" class="p-4 rounded-xl border text-center transition-all duration-300">
-                <div id="result-title" class="text-lg font-bold"></div>
-                <div id="result-desc" class="text-sm mt-1"></div>
+            <div class="flex gap-4 pt-2">
+                <button id="btn-start" onclick="startBruteForce()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6 py-2.5 rounded-lg transition shadow-lg shadow-amber-500/20">
+                    Iniciar Força Bruta
+                </button>
+                <button id="btn-stop" onclick="stopBruteForce()" disabled class="bg-slate-700 text-slate-400 font-bold px-6 py-2.5 rounded-lg transition cursor-not-allowed">
+                    Parar
+                </button>
             </div>
         </section>
 
-        <!-- Tabela Explicativa do Alfabeto -->
-        <section class="bg-slate-800/40 p-6 rounded-xl border border-slate-800 space-y-4">
-            <h3 class="text-md font-semibold text-slate-300">Tabela de Valores das Letras (A=1 ... Z=26)</h3>
-            <div id="alphabet-grid" class="grid grid-cols-6 sm:grid-cols-9 md:grid-cols-13 gap-2 text-center font-mono text-xs">
-                <!-- Preenchido dinamicamente via JS -->
+        <!-- Painel de Execução e Status -->
+        <section class="bg-slate-800/60 p-6 rounded-xl border border-slate-700 space-y-6">
+            
+            <!-- Cards de Métricas -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
+                    <div class="text-xs text-slate-400">Tentativas</div>
+                    <div id="stat-attempts" class="font-mono text-xl font-bold text-amber-400">0</div>
+                </div>
+                <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
+                    <div class="text-xs text-slate-400">Tentativa Atual</div>
+                    <div id="stat-current" class="font-mono text-xl font-bold text-emerald-400">-</div>
+                </div>
+                <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
+                    <div class="text-xs text-slate-400">Estrutura (Tupla)</div>
+                    <div id="stat-tuple" class="font-mono text-xs font-bold text-indigo-300 mt-1">-</div>
+                </div>
+                <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
+                    <div class="text-xs text-slate-400">Tempo</div>
+                    <div id="stat-time" class="font-mono text-xl font-bold text-slate-200">0.00s</div>
+                </div>
+            </div>
+
+            <!-- Terminal de Progresso -->
+            <div class="space-y-2">
+                <div class="flex justify-between text-xs text-slate-400 font-mono">
+                    <span>TERMINAL DE LOGS</span>
+                    <span id="log-count">0 registros</span>
+                </div>
+                <div id="terminal" class="bg-slate-950 border border-slate-800 rounded-lg p-4 font-mono text-xs h-48 overflow-y-auto space-y-1 text-slate-400">
+                    <div>> Aguardando início do teste...</div>
+                </div>
+            </div>
+
+            <!-- Card de Resultado Final -->
+            <div id="result-box" class="p-4 rounded-xl border text-center bg-slate-900/50 border-slate-800 text-slate-500">
+                Aguardando execução...
             </div>
         </section>
     </div>
 
-    <!-- Script de Lógica -->
+    <!-- Script com a lógica do Brute Force -->
     <script>
-        let currentAlgorithm = 'simple';
+        let isRunning = false;
+        let animationFrameId = null;
 
-        function getLetterValue(char) {
-            const code = char.toUpperCase().charCodeAt(0);
-            return (code >= 65 && code <= 90) ? (code - 64) : 0;
+        function log(msg, colorClass = 'text-slate-400') {
+            const terminal = document.getElementById('terminal');
+            const line = document.createElement('div');
+            line.className = colorClass;
+            line.innerText = msg;
+            terminal.appendChild(line);
+            terminal.scrollTop = terminal.scrollHeight;
         }
 
-        function setAlgorithm(type) {
-            currentAlgorithm = type;
-            const btnSimple = document.getElementById('btn-simple');
-            const btnWeighted = document.getElementById('btn-weighted');
-
-            if (type === 'simple') {
-                btnSimple.className = "p-3 rounded-lg border-2 border-blue-500 bg-blue-500/10 text-left transition hover:bg-blue-500/20";
-                btnSimple.querySelector('div').className = "font-bold text-blue-300";
-                btnWeighted.className = "p-3 rounded-lg border-2 border-slate-700 bg-slate-800/50 text-left transition hover:bg-slate-700/50";
-                btnWeighted.querySelector('div').className = "font-bold text-slate-300";
-            } else {
-                btnWeighted.className = "p-3 rounded-lg border-2 border-blue-500 bg-blue-500/10 text-left transition hover:bg-blue-500/20";
-                btnWeighted.querySelector('div').className = "font-bold text-blue-300";
-                btnSimple.className = "p-3 rounded-lg border-2 border-slate-700 bg-slate-800/50 text-left transition hover:bg-slate-700/50";
-                btnSimple.querySelector('div').className = "font-bold text-slate-300";
+        function getCartesianProduct(arr, length) {
+            if (length === 1) return arr.map(item => [item]);
+            const subProducts = getCartesianProduct(arr, length - 1);
+            const result = [];
+            for (const item of arr) {
+                for (const sub of subProducts) {
+                    result.push([item, ...sub]);
+                }
             }
-            calculate();
+            return result;
         }
 
-        function computeHash(word) {
-            let hash = 0;
-            let parts = [];
-            const cleanWord = word.trim().toUpperCase();
+        function stopBruteForce() {
+            isRunning = false;
+            document.getElementById('btn-start').disabled = false;
+            document.getElementById('btn-start').className = "bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6 py-2.5 rounded-lg transition shadow-lg shadow-amber-500/20";
+            document.getElementById('btn-stop').disabled = true;
+            document.getElementById('btn-stop').className = "bg-slate-700 text-slate-400 font-bold px-6 py-2.5 rounded-lg transition cursor-not-allowed";
+        }
 
-            for (let i = 0; i < cleanWord.length; i++) {
-                const char = cleanWord[i];
-                const val = getLetterValue(char);
-                
-                if (val > 0) {
-                    if (currentAlgorithm === 'simple') {
-                        hash += val;
-                        parts.push(`${char}(${val})`);
-                    } else {
-                        const positionWeight = i + 1;
-                        const itemVal = val * positionWeight;
-                        hash += itemVal;
-                        parts.push(`${char}(${val}×${positionWeight})`);
-                    }
+        async function startBruteForce() {
+            const target = document.getElementById('target-password').value.trim();
+            const charsetInput = document.getElementById('charset').value.trim();
+            const charset = Array.from(new Set(charsetInput.split(''))).filter(c => c !== '');
+
+            if (!target) {
+                alert("Digite uma senha alvo para testar.");
+                return;
+            }
+
+            if (target.length > 3) {
+                alert("Para manter o teste rápido no navegador, escolha uma senha de até 3 caracteres.");
+                return;
+            }
+
+            if (charset.length === 0) {
+                alert("Informe ao menos um caractere para o conjunto de testes.");
+                return;
+            }
+
+            // Interface em estado de execução
+            isRunning = true;
+            document.getElementById('btn-start').disabled = true;
+            document.getElementById('btn-start').className = "bg-slate-700 text-slate-400 font-bold px-6 py-2.5 rounded-lg transition cursor-not-allowed";
+            document.getElementById('btn-stop').disabled = false;
+            document.getElementById('btn-stop').className = "bg-red-500 hover:bg-red-600 text-white font-bold px-6 py-2.5 rounded-lg transition shadow-lg shadow-red-500/20";
+
+            document.getElementById('terminal').innerHTML = '';
+            document.getElementById('result-box').className = "p-4 rounded-xl border text-center bg-amber-950/30 border-amber-500/40 text-amber-300 animate-pulse";
+            document.getElementById('result-box').innerText = "⚡ Testando combinações...";
+
+            log(`[INÍCIO] Senha Alvo: "${target}" | Caracteres: [${charset.join(', ')}]`, 'text-blue-400');
+
+            let attempts = 0;
+            const startTime = performance.now();
+            let found = false;
+
+            // Gera todas as combinações de tamanho 1 até target.length
+            let combinations = [];
+            for (let len = 1; len <= target.length; len++) {
+                combinations.push(...getCartesianProduct(charset, len));
+            }
+
+            log(`[INFO] Total de combinações a testar: ${combinations.length}`, 'text-slate-400');
+
+            for (let i = 0; i < combinations.length; i++) {
+                if (!isRunning) {
+                    log('[STOP] Processo interrompido pelo usuário.', 'text-red-400');
+                    break;
+                }
+
+                attempts++;
+                const tuple = combinations[i];
+                // Equivalente ao "".join(combinacao) do Python:
+                const word = tuple.join(''); 
+                const tupleStr = `('${tuple.join("', '")}')`;
+
+                // Atualiza contadores na interface
+                document.getElementById('stat-attempts').innerText = attempts;
+                document.getElementById('stat-current').innerText = word;
+                document.getElementById('stat-tuple').innerText = tupleStr;
+                document.getElementById('stat-time').innerText = `${((performance.now() - startTime) / 1000).toFixed(2)}s`;
+
+                // Mostra log a cada N tentativas ou quando encontra a senha
+                if (attempts % 5 === 0 || word === target) {
+                    log(`Tentativa #${attempts}: ${tupleStr} -> "${word}"`);
+                    // Pausa de 30ms para animação visual do progresso
+                    await new Promise(r => setTimeout(r, 30)); 
+                }
+
+                if (word === target) {
+                    found = true;
+                    const totalTime = ((performance.now() - startTime) / 1000).toFixed(4);
+                    log(`\n[SUCESSO] Senha encontrada: "${word}" em ${attempts} tentativas (${totalTime}s)!`, 'text-emerald-400 font-bold');
+                    
+                    const resultBox = document.getElementById('result-box');
+                    resultBox.className = "p-4 rounded-xl border text-center bg-emerald-950/40 border-emerald-500 text-emerald-300";
+                    resultBox.innerHTML = `<strong>✔ SENHA ENCONTRADA!</strong><br>Senha: <code class="font-mono text-emerald-400">${word}</code> | Tentativas: <strong>${attempts}</strong> | Tempo: <strong>${totalTime}s</strong>`;
+                    break;
                 }
             }
 
-            const joinChar = currentAlgorithm === 'simple' ? ' + ' : ' + ';
-            const breakdownText = parts.length > 0 ? `${parts.join(joinChar)} = ${hash}` : 'Digite apenas letras [A-Z]';
-
-            return { hash, breakdownText };
-        }
-
-        function calculate() {
-            const word1 = document.getElementById('word1').value;
-            const word2 = document.getElementById('word2').value;
-
-            const res1 = computeHash(word1);
-            const res2 = computeHash(word2);
-
-            document.getElementById('hash1').innerText = res1.hash;
-            document.getElementById('breakdown1').innerText = res1.breakdownText;
-
-            document.getElementById('hash2').innerText = res2.hash;
-            document.getElementById('breakdown2').innerText = res2.breakdownText;
-
-            // Atualiza status de colisão
-            const resultBox = document.getElementById('result-box');
-            const resultTitle = document.getElementById('result-title');
-            const resultDesc = document.getElementById('result-desc');
-
-            const w1Clean = word1.trim().toUpperCase();
-            const w2Clean = word2.trim().toUpperCase();
-
-            if (!w1Clean || !w2Clean) {
-                resultBox.className = "p-4 rounded-xl border text-center bg-slate-800/50 border-slate-700 text-slate-400";
-                resultTitle.innerText = "Digite duas palavras para comparar";
-                resultDesc.innerText = "";
-            } else if (w1Clean === w2Clean) {
-                resultBox.className = "p-4 rounded-xl border text-center bg-blue-950/40 border-blue-800 text-blue-300";
-                resultTitle.innerText = "Palavras idênticas";
-                resultDesc.innerText = "Palavras iguais sempre geram a mesma Hash.";
-            } else if (res1.hash === res2.hash) {
-                resultBox.className = "p-4 rounded-xl border text-center bg-amber-950/40 border-amber-500/50 text-amber-300";
-                resultTitle.innerText = "⚠️ OCORREU UMA COLISÃO!";
-                resultDesc.innerText = `As palavras "${w1Clean}" e "${w2Clean}" são diferentes, mas ambas geraram a hash ${res1.hash}!`;
-            } else {
-                resultBox.className = "p-4 rounded-xl border text-center bg-emerald-950/40 border-emerald-800 text-emerald-300";
-                resultTitle.innerText = "✓ Sem colisão (Hashes diferentes)";
-                resultDesc.innerText = `"${w1Clean}" gera ${res1.hash} e "${w2Clean}" gera ${res2.hash}.`;
+            if (!found && isRunning) {
+                const totalTime = ((performance.now() - startTime) / 1000).toFixed(4);
+                log(`\n[FALHA] Senha não encontrada no conjunto de caracteres testado.`, 'text-red-400');
+                const resultBox = document.getElementById('result-box');
+                resultBox.className = "p-4 rounded-xl border text-center bg-red-950/40 border-red-500 text-red-300";
+                resultBox.innerHTML = `<strong>✖ SENHA NÃO ENCONTRADA!</strong><br>Foram testadas todas as ${attempts} combinações sem sucesso (${totalTime}s).`;
             }
-        }
 
-        // Renderiza a tabela do alfabeto
-        function renderAlphabet() {
-            const grid = document.getElementById('alphabet-grid');
-            grid.innerHTML = '';
-            for (let i = 1; i <= 26; i++) {
-                const char = String.fromCharCode(64 + i);
-                const el = document.createElement('div');
-                el.className = "bg-slate-900 border border-slate-800 p-2 rounded";
-                el.innerHTML = `<span class="text-blue-400 font-bold">${char}</span><br><span class="text-slate-500">${i}</span>`;
-                grid.appendChild(el);
-            }
+            stopBruteForce();
         }
-
-        // Inicialização
-        renderAlphabet();
-        calculate();
     </script>
 </body>
 </html>
