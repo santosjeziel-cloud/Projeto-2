@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora e Simulador de Hash - Alura</title>
+    <!-- CSS via Tailwind CDN para estilização rápida -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        code, pre, .font-mono { font-family: 'Fira Code', monospace; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto w-full space-y-8">
+        
+        <!-- Header -->
+        <header class="text-center space-y-2 border-b border-slate-800 pb-6">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-blue-400">
+                Visualizador de Funções de Hash e Colisões
+            </h1>
+            <p class="text-slate-400 text-sm md:text-base">
+                Entenda como duas palavras diferentes podem gerar o mesmo resultado numérico (colisão de hash).
+            </p>
+        </header>
+
+        <!-- Seletor de Modo/Algoritmo -->
+        <section class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+            <label class="block text-sm font-semibold text-slate-300 mb-2">Escolha a função de Hash:</label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button id="btn-simple" onclick="setAlgorithm('simple')" class="p-3 rounded-lg border-2 border-blue-500 bg-blue-500/10 text-left transition hover:bg-blue-500/20">
+                    <div class="font-bold text-blue-300">1. Hash Simples (Soma das Letras)</div>
+                    <div class="text-xs text-slate-400 mt-1">Soma os valores numéricos de cada letra ($A=1, B=2 \dots$). Causa colisão com anagramas!</div>
+                </button>
+                <button id="btn-weighted" onclick="setAlgorithm('weighted')" class="p-3 rounded-lg border-2 border-slate-700 bg-slate-800/50 text-left transition hover:bg-slate-700/50">
+                    <div class="font-bold text-slate-300">2. Hash Melhorada (Soma com Pesos)</div>
+                    <div class="text-xs text-slate-400 mt-1">Multiplica o valor da letra pela sua posição. Evita colisões em anagramas!</div>
+                </button>
+            </div>
+        </section>
+
+        <!-- Área de Teste de Colisão (Comparador) -->
+        <section class="bg-slate-800/60 p-6 rounded-xl border border-slate-700 space-y-6">
+            <h2 class="text-xl font-bold text-slate-200">Comparar Duas Palavras</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Palavra 1 -->
+                <div class="space-y-3">
+                    <label for="word1" class="block text-sm font-medium text-slate-300">Palavra 1</label>
+                    <input type="text" id="word1" value="AMOR" oninput="calculate()" placeholder="Digite uma palavra..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 font-mono text-lg text-emerald-400 uppercase focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    
+                    <div class="bg-slate-900/80 p-4 rounded-lg border border-slate-800 space-y-2">
+                        <div class="text-xs text-slate-400">Decomposição:</div>
+                        <div id="breakdown1" class="font-mono text-xs text-slate-300 break-words"></div>
+                        <div class="flex justify-between items-center pt-2 border-t border-slate-800">
+                            <span class="text-sm font-semibold text-slate-400">Hash:</span>
+                            <span id="hash1" class="font-mono text-xl font-bold text-emerald-400">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Palavra 2 -->
+                <div class="space-y-3">
+                    <label for="word2" class="block text-sm font-medium text-slate-300">Palavra 2</label>
+                    <input type="text" id="word2" value="ROMA" oninput="calculate()" placeholder="Digite uma palavra..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 font-mono text-lg text-indigo-400 uppercase focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    
+                    <div class="bg-slate-900/80 p-4 rounded-lg border border-slate-800 space-y-2">
+                        <div class="text-xs text-slate-400">Decomposição:</div>
+                        <div id="breakdown2" class="font-mono text-xs text-slate-300 break-words"></div>
+                        <div class="flex justify-between items-center pt-2 border-t border-slate-800">
+                            <span class="text-sm font-semibold text-slate-400">Hash:</span>
+                            <span id="hash2" class="font-mono text-xl font-bold text-indigo-400">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card de Resultado da Comparação -->
+            <div id="result-box" class="p-4 rounded-xl border text-center transition-all duration-300">
+                <div id="result-title" class="text-lg font-bold"></div>
+                <div id="result-desc" class="text-sm mt-1"></div>
+            </div>
+        </section>
+
+        <!-- Tabela Explicativa do Alfabeto -->
+        <section class="bg-slate-800/40 p-6 rounded-xl border border-slate-800 space-y-4">
+            <h3 class="text-md font-semibold text-slate-300">Tabela de Valores das Letras (A=1 ... Z=26)</h3>
+            <div id="alphabet-grid" class="grid grid-cols-6 sm:grid-cols-9 md:grid-cols-13 gap-2 text-center font-mono text-xs">
+                <!-- Preenchido dinamicamente via JS -->
+            </div>
+        </section>
+    </div>
+
+    <!-- Script de Lógica -->
+    <script>
+        let currentAlgorithm = 'simple';
+
+        function getLetterValue(char) {
+            const code = char.toUpperCase().charCodeAt(0);
+            return (code >= 65 && code <= 90) ? (code - 64) : 0;
+        }
+
+        function setAlgorithm(type) {
+            currentAlgorithm = type;
+            const btnSimple = document.getElementById('btn-simple');
+            const btnWeighted = document.getElementById('btn-weighted');
+
+            if (type === 'simple') {
+                btnSimple.className = "p-3 rounded-lg border-2 border-blue-500 bg-blue-500/10 text-left transition hover:bg-blue-500/20";
+                btnSimple.querySelector('div').className = "font-bold text-blue-300";
+                btnWeighted.className = "p-3 rounded-lg border-2 border-slate-700 bg-slate-800/50 text-left transition hover:bg-slate-700/50";
+                btnWeighted.querySelector('div').className = "font-bold text-slate-300";
+            } else {
+                btnWeighted.className = "p-3 rounded-lg border-2 border-blue-500 bg-blue-500/10 text-left transition hover:bg-blue-500/20";
+                btnWeighted.querySelector('div').className = "font-bold text-blue-300";
+                btnSimple.className = "p-3 rounded-lg border-2 border-slate-700 bg-slate-800/50 text-left transition hover:bg-slate-700/50";
+                btnSimple.querySelector('div').className = "font-bold text-slate-300";
+            }
+            calculate();
+        }
+
+        function computeHash(word) {
+            let hash = 0;
+            let parts = [];
+            const cleanWord = word.trim().toUpperCase();
+
+            for (let i = 0; i < cleanWord.length; i++) {
+                const char = cleanWord[i];
+                const val = getLetterValue(char);
+                
+                if (val > 0) {
+                    if (currentAlgorithm === 'simple') {
+                        hash += val;
+                        parts.push(`${char}(${val})`);
+                    } else {
+                        const positionWeight = i + 1;
+                        const itemVal = val * positionWeight;
+                        hash += itemVal;
+                        parts.push(`${char}(${val}×${positionWeight})`);
+                    }
+                }
+            }
+
+            const joinChar = currentAlgorithm === 'simple' ? ' + ' : ' + ';
+            const breakdownText = parts.length > 0 ? `${parts.join(joinChar)} = ${hash}` : 'Digite apenas letras [A-Z]';
+
+            return { hash, breakdownText };
+        }
+
+        function calculate() {
+            const word1 = document.getElementById('word1').value;
+            const word2 = document.getElementById('word2').value;
+
+            const res1 = computeHash(word1);
+            const res2 = computeHash(word2);
+
+            document.getElementById('hash1').innerText = res1.hash;
+            document.getElementById('breakdown1').innerText = res1.breakdownText;
+
+            document.getElementById('hash2').innerText = res2.hash;
+            document.getElementById('breakdown2').innerText = res2.breakdownText;
+
+            // Atualiza status de colisão
+            const resultBox = document.getElementById('result-box');
+            const resultTitle = document.getElementById('result-title');
+            const resultDesc = document.getElementById('result-desc');
+
+            const w1Clean = word1.trim().toUpperCase();
+            const w2Clean = word2.trim().toUpperCase();
+
+            if (!w1Clean || !w2Clean) {
+                resultBox.className = "p-4 rounded-xl border text-center bg-slate-800/50 border-slate-700 text-slate-400";
+                resultTitle.innerText = "Digite duas palavras para comparar";
+                resultDesc.innerText = "";
+            } else if (w1Clean === w2Clean) {
+                resultBox.className = "p-4 rounded-xl border text-center bg-blue-950/40 border-blue-800 text-blue-300";
+                resultTitle.innerText = "Palavras idênticas";
+                resultDesc.innerText = "Palavras iguais sempre geram a mesma Hash.";
+            } else if (res1.hash === res2.hash) {
+                resultBox.className = "p-4 rounded-xl border text-center bg-amber-950/40 border-amber-500/50 text-amber-300";
+                resultTitle.innerText = "⚠️ OCORREU UMA COLISÃO!";
+                resultDesc.innerText = `As palavras "${w1Clean}" e "${w2Clean}" são diferentes, mas ambas geraram a hash ${res1.hash}!`;
+            } else {
+                resultBox.className = "p-4 rounded-xl border text-center bg-emerald-950/40 border-emerald-800 text-emerald-300";
+                resultTitle.innerText = "✓ Sem colisão (Hashes diferentes)";
+                resultDesc.innerText = `"${w1Clean}" gera ${res1.hash} e "${w2Clean}" gera ${res2.hash}.`;
+            }
+        }
+
+        // Renderiza a tabela do alfabeto
+        function renderAlphabet() {
+            const grid = document.getElementById('alphabet-grid');
+            grid.innerHTML = '';
+            for (let i = 1; i <= 26; i++) {
+                const char = String.fromCharCode(64 + i);
+                const el = document.createElement('div');
+                el.className = "bg-slate-900 border border-slate-800 p-2 rounded";
+                el.innerHTML = `<span class="text-blue-400 font-bold">${char}</span><br><span class="text-slate-500">${i}</span>`;
+                grid.appendChild(el);
+            }
+        }
+
+        // Inicialização
+        renderAlphabet();
+        calculate();
+    </script>
+</body>
+</html>
